@@ -1,91 +1,108 @@
 ﻿// io.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
-
-#include <iostream>
-#include <string>
-#include<fstream>
-namespace Souredfish {
-	typedef struct {
-		int n;
-		int m;
-		std::string huffmanTree;
-		int* weight = new int[m];
-		std::string letter;
-		std::string message;
-		std::string encode;
-		std::string decode;
-	}data;
-	data d;
-	void readCharacter() {//读取字符集
-		int alphabet;
-		std::cout << "请输入字符集大小" << std::endl;
-		std::cin >> d.n;
-		std::cout << "请输入字符集" << std::endl;
-		for (int i = 0; i < d.n; i++) {
-			alphabet=getchar();
-			d.letter += alphabet;
-		}
+#include"io.h"
+	void IO::readCharacter() {//读取字符集
+		using namespace std;
+		cout<<"建立Huffman树:";
+		cout<<"请输入字符串以建立huffman树"<<endl;
+		message = "hello";
+		//getline(cin,message);
+		
+		cout<<"读取成功！";
+		huffmantree->getMessage(message);
+		huffmantree->initialization();
+		huffmantree->OutputCode(encode);
+		huffmantree->Decoding(encode,decode);
 	}
-	void weight() {//读取权值
-		printf("请输入%d个权值", d.m);
-		for (int i = 0; i < d.m; i++ ) {
-			std::cin >> d.weight[i];
-		}
-	}
-	void huffman() {//存储哈夫曼树
-		{std::cin >> d.huffmanTree; }
+	
+	void IO::getHuffman() {//存储哈夫曼树
 		std::ofstream out("huffman.txt", std::ios::out);
-		out<< d.huffmanTree<<std::endl;
+		out<< outputtree <<std::endl;
 		out.close();
+		system("pause");
+		system("cls");
+		interface();
 	}
-	void readMessage(){//读取未编码的发送电文
+	void IO::readMessage(){//读取未编码的发送电文
+		std::cout << "ReadMessage" << std::endl;
 		std::ifstream in("huffman.txt", std::ios::in);
-		in >> d.huffmanTree;
+		in >> outputtree;
 		in.close();
-		std::ifstream in("tobetrans.dat", std::ios::in);
-		in >> d.message;
+		std::ifstream rein("tobetrans.dat", std::ios::in);
+		in >> message;
+		//std::cin.sync()
 		in.close();
+		system("pause");
+		system("cls");
+		interface();
 	}
-	void readySend() {//存储编码后的电文
-		{std::cin >> d.encode; }
+	void IO::readySend() {//存储编码后的电文
 		std::ofstream out("codefile.txt", std::ios::out);
-		out << d.encode<<std::endl;
+		out << encode<<std::endl;
 		out.close();
 	}
-	void writeMessage() {//输出电文
-		{std::cin >> d.decode; }
+	void IO::readPassword() {//读取未解码的密码
+		std::ifstream in("codefile.txt", std::ios::in);
+		in >> encode >> std::endl;
+		in.close();
+	}
+	void IO::writeMessage() {//输出电文
+		std::cout << "输出电文" << std::endl;
 		std::ofstream out("txtfile.txt", std::ios::out);
-		out << d.decode<<std::endl;
+		out << decode << std::endl;
 		out.close();
-		{std::cin >> d.encode; }
-		std::ofstream out("codeprint.txt", std::ios::out);
-		for (int i = 0; d.encode[i]!='\0'; i++) {
-			if (i%50==0) {
+		std::ofstream reout("codeprint.txt", std::ios::out);
+		for (int i = 0; encode[i] != '\0'; i++) {
+			if (i % 50 == 0) {
 				std::cout << std::endl;
-				out << std::endl;
+				reout << std::endl;
 			}
-			std::cout << d.encode[i];
-			out << d.encode[i];
+			std::cout << encode[i];
+			reout << encode[i];
 		}
-		out.close();
-		{std::cin >> d.huffmanTree; }
-		std::ofstream out("treeprint.txt", std::ios::out);
-		std::cout << d.huffmanTree<<std::endl;
-		out << d.huffmanTree << std::endl;
-		out.close();
+		reout.close();
+	}
+		void IO::writeHuffmantree() {//打印哈夫曼树
+			std::cout<<"printHuffmantree"<<std::endl;
+			std::ofstream out("treeprint.txt", std::ios::out);
+
+			
+
+			std::cout << outputtree << std::endl;
+			out << outputtree << std::endl;
+			out.close();
+		system("pause");
+		system("cls");
+		interface();
+		}
+	
+void IO::interface() {
+	int choice;
+	std::cout << "欢迎使用哈夫曼解编码器" << std::endl;
+	std::cout << "1.建立哈夫曼树,并创建哈夫曼编码" << std::endl;
+	std::cout << "2.对文件进行编码" << std::endl;
+	std::cout << "3.对文件进行译码" << std::endl;
+	std::cout << "4.打印密码文件" << std::endl;
+	std::cout << "5.打印哈夫曼树" << std::endl;
+	std::cin >> choice;
+	system("cls");
+	switch (choice) {
+	case 1:
+		readCharacter();
+		getHuffman();
+		break;
+	case 2:
+
+	case 3:
+		readMessage();
+		readySend();
+		break;
+	case 4:
+		writeMessage();
+		break;
+	case 5:
+		writeHuffmantree();
+		break;
 	}
 }
-int main()
-{
-}
-
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
-
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件
+ 
