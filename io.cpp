@@ -43,14 +43,16 @@
 	}
 	void IO::readPassword() {//读取未解码的密码
 		std::ifstream in("codefile.txt", std::ios::in);
-		in >> encode >> std::endl;
+		in >> encode ;
 		in.close();
 	}
-	void IO::writeMessage() {//输出电文
-		std::cout << "输出电文" << std::endl;
+	void IO::finishDecode() {
 		std::ofstream out("txtfile.txt", std::ios::out);
 		out << decode << std::endl;
 		out.close();
+	}
+	void IO::writeMessage() {//输出电文
+		std::cout << "输出电文" << std::endl;
 		std::ofstream reout("codeprint.txt", std::ios::out);
 		for (int i = 0; encode[i] != '\0'; i++) {
 			if (i % 50 == 0) {
@@ -62,7 +64,7 @@
 		}
 		reout.close();
 	}
-		void IO::writeHuffmantree() {//打印哈夫曼树
+	void IO::writeHuffmantree() {//打印哈夫曼树
 			std::cout<<"printHuffmantree"<<std::endl;
 			std::ofstream out("treeprint.txt", std::ios::out);
 
@@ -74,7 +76,7 @@
 		system("pause");
 		system("cls");
 		interface();
-		}
+	}
 	
 void IO::interface() {
 	int choice;
@@ -92,10 +94,12 @@ void IO::interface() {
 		getHuffman();
 		break;
 	case 2:
-
-	case 3:
 		readMessage();
 		readySend();
+		break;
+	case 3:
+		readPassword();
+		finishDecode();
 		break;
 	case 4:
 		writeMessage();
