@@ -41,6 +41,8 @@ class Huffman
     void Decoding(std::string c,std::string &s);//将编码转换为字符串
     void OutputCode(std::string &code);//输出编码
     void OutputStr();//输出字符串
+    void PrintHuffmanTree(WeightNode* T,int level=1);
+    void PrintHuffmanTree();
     private:
     int negative;//负值数
     unsigned long int recode;//最终的编码

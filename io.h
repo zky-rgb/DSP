@@ -17,6 +17,7 @@ public:
 	void interface();//打开用户的交互界面
 	void readPassword();//读取待解码的密码
 	void finishDecode();//存储解码后的密码
+	void FR();
 private:
 	Huffman* huffmantree;//保存的huffman树类
 	std::string message;//保存用户输入的建树字符串

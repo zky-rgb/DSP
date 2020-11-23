@@ -72,22 +72,6 @@ void Huffman::HuffmanInsert(WeightNode *p)
                 ++(v[q->posection+negative-1]->weight);//增加其权值
                 if(v.size()>1)
                 {
-                    //for(std::vector<WeightNode*>::iterator iter=v.begin()+q->posection+negative;iter<v.end();++iter)
-                    //{
-                    //    if(((*iter)->weight)<((*(iter-1))->weight))//如果前一个比后一个大,则交换位置
-                    //    {
-                    //        q=*iter;                            
-                    //        *iter=*(iter-1);
-                    //        *(iter-1)=q;                            
-                    //        int i1=(*iter)->posection;                            
-                    //        (*iter)->posection=(*(iter-1))->posection;
-                    //        (*(iter-1))->posection=i1;
-                    //    }
-                    //    else
-                    //    {
-                    //        break;
-                    //    }
-                    //}
                     for (int i(q->posection+negative); i < v.size(); ++i)
                     {
                         if (v[i]->weight < v[i - 1]->weight)
@@ -367,4 +351,25 @@ void Huffman::Decoding(std::string c, std::string& s)
 void Huffman::getMessage(const std::string s)
 {
     HuffmanStr=s;
+}
+
+
+//打印哈夫曼树
+void Huffman ::PrintHuffmanTree(WeightNode* T,int level) {
+
+    if(T==NULL){
+        return;
+    }
+    PrintHuffmanTree(T->rchild,level+1);
+    for(int i=0;i<level;i++){
+        std::cout<<" ";
+    }
+    std::cout<<T->c<<std::endl;
+    PrintHuffmanTree(T->lchild,level+1);
+
+
+}
+
+void Huffman ::PrintHuffmanTree() {
+    PrintHuffmanTree(root,1);
 }
