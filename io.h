@@ -10,6 +10,7 @@ public:
 	void readCharacter();//读取字符串
 	void weight();//取字符，创建数组读取权值
 	void getHuffman();//获取哈夫曼树
+	void getHuffman(WeightNode* T, int level);
 	void readMessage();//读取哈夫曼树和电文原文
 	void readySend();//取得编码后的电文
 	void writeMessage();//取得解码后电文

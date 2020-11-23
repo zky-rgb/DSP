@@ -43,6 +43,7 @@ class Huffman
     void OutputStr();//输出字符串
     void PrintHuffmanTree(WeightNode* T,int level=1);
     void PrintHuffmanTree();
+    friend void getHuffman();
     private:
     int negative;//负值数
     unsigned long int recode;//最终的编码

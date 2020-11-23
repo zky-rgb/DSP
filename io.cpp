@@ -35,6 +35,20 @@ void IO::FR() {//检查树是否存在
 		system("cls");
 		interface();
 	}
+
+	void IO::getHuffman(WeightNode* T, int level) {
+		std::ofstream out("huffman.txt", std::ios::out);
+		if (T == NULL) {
+			return;
+		}
+		getHuffman(T->rchild, level + 1);
+		for (int i = 0; i < level; i++) {
+			out << " ";
+		}
+		out << T->c << std::endl;
+		getHuffman(T->lchild, level + 1);
+	}
+
 	void IO::readMessage(){//读取未编码的发送电文
 		FR();
 		std::cout << "ReadMessage" << std::endl;
