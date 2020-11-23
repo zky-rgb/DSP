@@ -1,0 +1,39 @@
+用到的方法：
+Struct Tetrad//搜索节点	
+{
+   Tree* p;//搜索到的节点的地址
+   Bool tag;//是否搜索到
+   Int deep;//当前深度
+};
+struct Node{
+
+    string data;    //数据
+    std::string ip; //仅最底层叶子结点需要的ip地址数据
+    int pos;//父节点的位置,从0开始
+    Node* parent;   //上层节点
+    Node* firstchild;   //每一层首个节点指针
+    Node* nextsibling;  //每个节点指向下一兄弟节点的指针
+};
+
+class Tree{
+public:
+    Tree();
+    void CreateTree(std::string dNamePart[],std::string ip);//s建树(一个域名ip调一次)
+    Tetrad searchPath(std::string *str);//用来进行搜索，如果搜索到了路径，则tag为1,否则为0
+    bool deletePath(std::string *str);//删除已有的路径
+    void deleteNode(Node *p,int i);//删除对应的节点
+    void PrintTree();   //屏幕打印树整个域名树
+private:
+    Node* root;  
+    Node* level[4]; //保存每一层首个元素地址
+    Node* pre[4];   //建树插入过程中间变量
+};
+
+
+souredfishIO：：load（）：从tree.txt文件中,如果没有，则让用户输入读取树
+souredfishIO：：save（）：将tree存入tree.txt
+souredfishIO::domainName():获取域名
+souredfishIO::divide(std::string &example,std::string examplePart[]):将域名以点为界分段，得到dNamePart[4]
+string tree:存储树	
+string dNamePart[3:0]:存储域名片段（域名从前到后，变量从0到3）
+string ip:存储域名对应的ip
