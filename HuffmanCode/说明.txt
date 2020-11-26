@@ -1,1 +1,42 @@
+内容声明：
+进入功能选择界面后，主要包含五种操作：
+1.初始化（Initialization）：从终端读入字符集大小n，以及n个字符和m个权值，建立哈夫曼树，并将它存于磁盘文件huffman中；
+2.编码（Encoding）：利用以建好的哈夫曼树（如不在内存，则从已保存的文件huffman中读入），对发送电文（读取自文件 tobetrans.dat）进行编码，然后将结果存于磁盘文件codefile中；
+3.译（解）码（Decoding）：利用已建好的哈夫曼树，对文件codefile中的代码进行译码，结果存入文件textfile中；
+4.打印代码文件（Print）：将文件codefile以紧凑格式显示在终端上，每行50个代码。同时将此字符形式的编码文件写入文件codeprint中；
+5.打印哈夫曼树（Tree Printing）：将已在内存中的哈夫曼树以直观的方式（树或凹入表形式）显示在终端上，同时将此字符形式的哈夫曼树写入文件treeprint中。
 
+问题分析：
+由题目条件可知，该哈夫曼编码/译码器的关键在于哈夫曼树的创建以及解码：
+哈夫曼树的理论创建过程如下：
+1.构成初始集合：对于给定的m个权值{W1,W2,W3,……,Wi,……,Wn}构成n棵二叉树的初始集合，F={T1,T2,T3,……,Ti,……,Tn},其中每棵二叉树Ti中只有一个权值为Wi的根结点，它的左右子树均为空；
+2.选取左右子树：在F中选取两棵根结点权值最小的树作为新构造的二叉树的左右子树，新二叉树的根结点的权值为其左右子树的根结点的权值之和；
+3.删除左右子树：从F中删除这两棵树，并把这棵新的二叉树同样以升序排列加入到集合F中；
+4.重复以上步骤2和3，直到集合F中只有一棵二叉树为止。
+因此，我们可以分析出：
+1.定义一个功能函数（void readCharacter()）从终端读入字符集大小n和n个字符
+2.取得不重复的字符数m，定义数组weight[m]读取m个权值并保存它们；
+3.定义一个代表森林的数组，在创建哈夫曼树的过程中保存被选中的字符，即给定电文中出现的字符，模拟哈夫曼树选取和删除左右子树的过程；
+4.自底而上创建哈夫曼树，保存根的地址和每个叶结点的地址，即字符的地址，然后自底而上进行检索，调整为哈夫曼树形式，将哈夫曼树（string huffmanTree）存入磁盘文件（huffman）中；
+5.根据已创建的哈夫曼树，对发送的电文进行读取，实现哈夫曼编码，并将编码内容存入代码文件（codefile）中；
+6.从代码文件（codefile）当中读取字符，根据当前字符为0或1的状况访问左子树或者右子树，实现解码功能，并将其存入文字文件（textfile）中；
+7.将代码文件（codefile）中的内容输出在终端显示；
+8.将磁盘文件（huffman）中的哈夫曼树同时输出在终端和文件treeprint中。
+
+名词定义： 
+int n：输入的字符集大小；
+string letter：n个字符；
+int m：不同的字符数；
+int weight[m]：m个权值；
+string huffmanTree：哈夫曼树；
+string message：电文原文；
+string encode：编码后的电文；
+string decode：解码后的电文；
+
+函数介绍：
+1.void readCharacter()：读取字符集并存储在letter中，字符长度为n；
+2.void weight()：取得不重复的字符数m，创建weight【m】数组读取m个权值；
+3.void Huffman()：获取哈夫曼树huffmanTree将其写入huffman.txt；
+4.void readMessage():从huffman.txt中读取huffmanTree。从tobetrans.dat中读取电文原文；
+5.void readySend()：取得编码后的电文encode，将其写入codefile.txt；
+6.void writeMessage()：取得解码后的电文decode，将其写入txtfile.txt。将codefile.txt(即编码后的电文encode)50一行同时输出在屏幕和codeprint.txt中。将huffmanTree同时输出在屏幕和treeprint中。
