@@ -6,27 +6,50 @@ Tree ::Tree() {
     a->firstchild = a->nextsibling = NULL;
     root = a;
 
-    for(int i=0;i<4;i++){
-        level[i] = new Node;
-        pre[i] = level[i];
-        level[i]->data = "0";
-        a->firstchild = level[i];
-        a = level[i];
-    }
 }
 
 
 void Tree ::CreateTree(std::string dNamePart[],std::string ip) {
-    for(int i=3;i>-1;i--){
-        Node* t = new Node;
-        pre[i]->nextsibling = t;
-        t->data = dNamePart[i];
-        pre[i] = t;
 
-        if(i==0){
-            t->ip = ip;
+    if(root->firstchild==NULL){
+        Node* ptr=root;
+        std::string init[4]={"cn","com","demo","www"};  //初始化树
+        for(int i=3;i>-1;i++){
+            Node* p = new Node;
+            p->data = init[i];
+            p->parent = ptr;
+            ptr = p;
+        }
+
+    }
+
+    Node* ptr=root;
+    for(int i=3;i>-1;i++){
+        if(dNamePart[i]=="0"){
+            break;
+        }
+
+
+        if(searchPath(&dNamePart[i]).tag==0){   //没有查找到相同节点就创建新节点
+            Node* p = new Node;
+            Node* d = ptr->firstchild;
+            if(d==NULL){
+                d->firstchild = p;
+            } else{
+                while (d!=NULL){
+                    d = d->nextsibling;
+                }
+                d->nextsibling = p;
+            }
+            p->data = dNamePart[i];
+            p->parent = ptr;
+            ptr = p;
+        } else{     
+            Node* locate = searchPath(&dNamePart[i]).p; //查找到相同节点 不需要重新建立节点 确定前后继承关系即可
+            ptr = locate;
         }
     }
+
 
 }
 //用来搜索需要的节点
