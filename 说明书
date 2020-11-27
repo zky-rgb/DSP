@@ -1,0 +1,53 @@
+
+clas Huffman
+{
+     public:
+        Huffman() :negative(0), recode(0), Ehead(0), root(NULL) {}
+    ~Huffman();//析构函数
+    void getMessage(const std::string s);//获取用来建树的字符串
+    void combine(int i);//将两个结点合并
+    void handling();//计算字符串中的加权
+    void initialization();//huffman树的初始化
+    int maxheigh(int i);//返回最大的树深
+    void coding();//生成编码
+    void HuffmanInsert(WeightNode *p);//将结点插入加入到权值的结合中
+    void Huffmandestroy(WeightNode *r);//销毁二叉树
+    void Encoding();//将字符串转换为编码
+    void Decoding(std::string c,std::string &s);//将编码转换为字符串
+    void OutputCode(std::string &code);//输出编码
+    void OutputStr();//输出字符串
+    void PrintHuffmanTree(WeightNode* T,int level=1);
+    void PrintHuffmanTree();
+    friend void getHuffman();
+    private:
+    int negative;//负值数
+    unsigned long int recode;//最终的编码
+    int Ehead;//开头零的数目
+    std::vector<WeightNode *> v;//用来保存huffman树的子树们
+    std::unordered_map<char,WeightNode*> m;//用哈希表来建立字典来搜索已有字符
+    std::unordered_map<char,Codedata*> cm;//用来查询编码
+    std::string HuffmanStr;//用来接收字符串
+    std::string Huffmancode;//用来接收编码
+    WeightNode *root;//huffman树的根节点
+}
+
+
+
+class PIO{
+public:
+    PIO();
+    void interface(); //用户界面信息
+    void input();    //从文件读取要解压缩的txt文件 并建立哈夫曼树
+    void inputProcess()//将输入的哈夫曼树建立并将二进制字符串译码
+    void outputTree(WeightNode* T,int level=1);//递归遍历并将哈夫曼树中缀输出到文件
+    void outputCode();//将编码压缩后字符串存储到文件
+
+
+private:
+    Huffman *huffmantree；
+    std::string message;//保存用户输入的或文件读入的语句
+	std::string encode;//编码后的信息
+	std::string decode;//解码后信息
+    WeightNode* inroot; //从文件读取后建立哈夫曼树的树根
+    
+};
