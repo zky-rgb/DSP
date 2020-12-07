@@ -1,0 +1,8 @@
+﻿  Picture.cpp
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(24,27): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(249,23): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(293,23): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(301,28): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(316,23): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\杨业卿\source\repos\Picture\Picture\PictureProcess.h(319,28): warning C4018: “<”: 有符号/无符号不匹配
+  Picture.vcxproj -> C:\Users\杨业卿\source\repos\Picture\Debug\Picture.exe
