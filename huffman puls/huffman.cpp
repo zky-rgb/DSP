@@ -58,12 +58,15 @@ void Huffman::coding(std::unordered_map<char,int>& weight)//生成加权
     WNode* p1=new WNode(l1.front().c,l1.front().weight);
     l1.pop_front();//弹出第一个
     WNode* p2=new WNode(l1.front().c,l1.front().weight);
+    l1.pop_front();//弹出第一个
     WNode* p3=new WNode;
     p3->weight=p1->weight+p2->weight;
     p3->lchild=p1;
     p3->rchild=p2;
     p1->parent=p3;
+    p1->codenum=false;
     p2->parent=p3;
+    p2->codenum=true;
     l2.push_back(p3);
     
     //循环插入
@@ -144,28 +147,47 @@ void Huffman::coding(std::unordered_map<char,int>& weight)//生成加权
 void Huffman::creatCodetable()
 {
     std::vector<bool> v;
-    WNode *ptr=root;
+    WNode *ptr(root),*r;
     WNode *q;
     //从根节点开始遍历
     std::stack<WNode*> s;
+    bool flag;//标志位
     s.push(ptr);
-    while(!s.empty())
+    if(ptr!=NULL)
     {
-        q=s.top();//读取栈顶的指针
-        s.pop();
-        v.push_back(q->codenum);
-        if(q->c!='\0')//不为空节点
+        do
         {
-            CharCode[q->c]=v;//写入表中
-            CodeChar[v]=q->c;
-            v.pop_back();//退位
-        }
-        else
-        {
-            //将两个根结点入栈
-            s.push(q->lchild);
-            s.push(q->rchild);
-        }
+            while(ptr!=NULL)
+            {
+                s.push(ptr); 
+                if(ptr!=root)
+                    v.push_back(ptr->codenum);
+                ptr=ptr->lchild;
+            }
+            flag=true;
+            r=NULL;
+            while(!s.empty()&&flag)
+            {
+                q=s.top();
+                if(q->c!='\0')//不为空节点
+                {
+                    CharCode[q->c]=v;//写入表中
+                    CodeChar[v]=q->c;
+                }
+                if(q->rchild==r)
+                {
+                    s.pop();
+                    if(!v.empty())
+                        v.pop_back();//退位
+                    r=q;
+                }
+                else
+                {
+                    ptr=q->rchild;
+                    flag=false;
+                }
+            }
+        } while (!s.empty());
     }
 }
 void Huffman::Decoding(std::string &in,std::string &out)
