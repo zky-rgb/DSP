@@ -33,10 +33,10 @@ class Huffman
     void creatCodetable();//生成对应的huffmam
     void Huffmandestroy(WNode*r);//销毁二叉树
     void Decoding(std::string &c,std::string &s);//将编码转换为字符串
-    void OutputCode(std::string &code);//输出编码
-    void OutputStr();//输出字符串
-    void PrintHuffmanTree();
-    friend void getHuffman();
+    std::vector<bool> OutputCode()//输出编码
+    {
+        return encode;
+    }
     private:
     std::vector<bool> encode;//最终编码
     std::unordered_map<char,std::vector<bool> > CharCode;//用来存储每个字符所对应的编码
