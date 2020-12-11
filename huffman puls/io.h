@@ -1,6 +1,0 @@
-class IO{
-public:
-
-private:
-
-};
