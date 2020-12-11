@@ -6,57 +6,74 @@
 #include<fstream>
 #include <vector>
 #include <sstream>
-
-class Huffman;
-class WeightNode;
-
-//using namespace std;
-
-class PIO{
-public:
-    PIO(){
-        huffmantree = NULL;
-    };
-    void interface(); //用户界面信息
-    void input();    //从文件读取要解压缩的txt文件 并建立哈夫曼树
-    void outputCode();//将编码压缩后字符串存储到文件
-    void inputProcess();//将输入的哈夫曼树建立并将二进制字符串译码
-    void outputTree(WeightNode* T,int level=1);//递归遍历并将哈夫曼树中缀输出到文件
-
-
-
-private:
-    Huffman *huffmantree;
-    std::string message;//保存用户输入的或文件读入的语句
-    std::string encode;//编码后的信息
-    std::string decode;//解码后信息
-    WeightNode* inroot; //从文件读取后建立哈夫曼树的树根
-
-};
-
-
+#include"HIO.h"
 
 void PIO ::input() {
-    std::ifstream in("tree.txt",std::ios::in); //创建文件读写
+    std::ifstream in(fileName,std::ios::in|std::ios::binary); //创建二进制文件的读写
 
     std::stringstream buffer;//利用stringsteam字符流来临时存储读到的txt文件内容
     buffer<<in.rdbuf();
     std::string str(buffer.str());
     message = str;//将读到的内容传递给私有数据乘员message
+    std::cout << "原始数据";
     std::cout<<message;
-
+    huffmantree->getMessage(message);
+    huffmantree->handling();
     in.close();
 
 }
 
 void PIO ::outputCode() {
-    std::ofstream out("out.dat",std::ios::out);//采用二进制输出方式
-    out<<encode;//输出编码后的二进制信息
+    std::ofstream out("out.dat", std::ios::out);//采用二进制输出方式
+    for (bool i : huffmantree->OutputCode()) {//输出编码后的二进制信息
+        if (i) {
+            out << 1;
+        }
+        else
+            out << 0;
+    }
     out.close();
 }
 
-
+void PIO::inputProcess() {
+    std::ifstream in("out.dat", std::ios::in);
+    in >> recover;//读入待解码的二进制编码
+    huffmantree->Decoding(recover, decode);//解码
+    in.close();
+    std::cout << "操作之后的数据" << std::endl;
+    std::cout << decode;
+}
 void PIO ::interface() {
     
+    using namespace std;
+    
+    bool quit(false);
+    do
+    {
+        char c;
+        cout<<"1.encoding"<<endl;
+        cout<<"2.decoding"<<endl;  
+        cout<<"3.quit"<<endl;
+        c=cin.get();
+        while(cin.get()!='\n')
+            continue;
+        switch (c)
+        {
+        case '1':
+            cout << "请输入文件名" << std::endl;
+            std::cin >> fileName;
+            input();
+            outputCode();
+            inputProcess();  
+            break;
+        case '2':
+            
+        default:
+            break;
+        }
+    } while (quit);
+    
+
+
 }
 
