@@ -1,16 +1,8 @@
-#include"class.h"
+#include"Warhouse.h"
 #include<stack>
 
 //B树类的实现
 
-//B树类构造函数
-BTree::BTree(Message *m)
-{
-	B_n = 0;//B_树节点数
-    root=NULL;
-	B_m = 3;
-    Wh_msg=m;//获取message对象指针
-}
 //析构函数
 BTree::~BTree()
 {
@@ -42,17 +34,14 @@ BTree::~BTree()
 	}
 }
 //将数据节点插入到B树中
-void BTree::Wh_BTreeInsert(const int &i,const std::string &str,
-Type_Lable t,int p_in,int p_out,Type_Season *s)
+void BTree::Wh_BTreeInsert(Wh_Chain* p1)
 {
-    Wh_Chain* p1 = new Wh_Chain(i,str,t,p_in,p_out,s);//生成一个数据节点
-	Triple loc = Wh_BTreeSearch(*p1);//检查是否已经存在
-
+	Triple loc = Wh_BTreeSearch(p1->WhC_REID());//检查是否已经存在
     if (loc.tag)//说明节点存在
     {
         delete p1;
         //如果这个节点已经存在，那么就提醒用户节点已经存在
-        std::string str="WH:[warn]This id have been used!";
+        std::string str="WH:[warn]This id has been used!";
         Wh_msg->msg_add(str,false);//插入到警告队列
     }
 	else//节点不存在
@@ -68,11 +57,12 @@ Type_Lable t,int p_in,int p_out,Type_Season *s)
         }
 		BNode* rp = NULL;//对应的右侧的子节点指针
 		int j = loc.id;//获取插入位置
+        Wh_C.lock();
 		Wh_BTreeInsertKey(p, j, p1, rp);//插入关键码
-        std::string str="WH:[msg]Add success!";
+        Wh_C.unlock();
+        std::string str="WH:[msg]Add new kind success!";
         Wh_msg->msg_add(str,true);//插入到普通消息队列
         Wh_msg->msg_updatasum(true);//总数递增
-        Wh_idlist.push_back(i);//加入id容器中
 	}
 }
 //插入关键码
@@ -140,7 +130,7 @@ void BTree::Wh_BTreeInsertKey(BNode* p, int j, Wh_Chain* p_data, BNode* rp)
 	}
 }
 //搜索节点
-Triple BTree::Wh_BTreeSearch(const Wh_Chain& x)
+Triple BTree::Wh_BTreeSearch(const int &id)
 {
     Triple t;
     if(root==NULL)//根节点为空
@@ -150,6 +140,7 @@ Triple BTree::Wh_BTreeSearch(const Wh_Chain& x)
         t.tag=0;
         return t;   
     }
+    Wh_C.lock();
 	BNode* p = root;//获取根节点
     Wh_Chain* q(root->P_data[0]);
 	while (p!=NULL)//对于B树进行搜索
@@ -159,17 +150,16 @@ Triple BTree::Wh_BTreeSearch(const Wh_Chain& x)
 			q = p->P_data[i];
 			if (q != NULL)//如果该节点不为空
 			{
-				if (q->WhC_id == x.WhC_id)//等于，说明找到
+				if (q->WhC_REID() == id)//等于，说明找到
 				{
 					t.r = p;
 					t.id = i;
 					t.tag = 1;//标记找到
+                    Wh_C.unlock();
 					return t;
 				}
-				else if (q->WhC_id < x.WhC_id)//如果节点id大，则继续
-				{
+				else if (q->WhC_REID() < id)//如果节点id大，则继续
 					continue;
-				}
 				else//到下一层或则退出
 				{
 					if (p->kids_ptr[i] != NULL)
@@ -182,9 +172,9 @@ Triple BTree::Wh_BTreeSearch(const Wh_Chain& x)
 						t.r = p;
 						t.id = i;
 						t.tag = 0;//没有找到节点
+                        Wh_C.unlock();
 						return t;
 					}
-
 				}
 			}
 			else//该结点为空
@@ -199,6 +189,7 @@ Triple BTree::Wh_BTreeSearch(const Wh_Chain& x)
 					t.r = p;
 					t.id = i;
 					t.tag = 0;//tag=0，没有找到子结点
+                    Wh_C.unlock();
 					return t;//ֱ返回搜索结果
 				}
 			}
@@ -449,52 +440,39 @@ void BTree::Wh_BTreeRemoveKey(BNode* p, int j, bool kids)
 //将Btree的结点移除
 bool BTree::Wh_BTreeRemove(const int& d)
 {
-    Wh_Chain* p1 = new Wh_Chain(d);
-    Triple loc = Wh_BTreeSearch(*p1);//搜索要删除的结点
+    Triple loc = Wh_BTreeSearch(d);//搜索要删除的结点
     if (!loc.tag)//结点不存在
-    {
-        delete p1;
         return false;
-    }
     else//如果结点存在
     {
         BNode* p = loc.r;
         int j = loc.id;
+        Wh_C.lock();
         Wh_BTreeRemoveKey(p, j);
-        std::string str="WH:[msg]delete success!";
+        Wh_C.unlock();
+        std::string str="WH:[msg]delete kind success!";
         Wh_msg->msg_add(str,true);//插入到消息队列
         Wh_msg->msg_deletedeal(d);//从进出口表里删除这一项
         Wh_msg->msg_updatasum(false);//总数递减
-        for(std::vector<int>::iterator iter=Wh_idlist.begin();iter!=Wh_idlist.end();++iter)
-        {
-            if((*iter)==d)
-            {
-                Wh_idlist.erase(iter);
-                break;
-            }
-        }
         return true;
     }
 }
 //更新结点,如果更新成功，则返回true
-bool BTree::Wh_UpdateNode(int id,int sum)
+bool BTree::Wh_UpdateNode(const int &id,const int& sum)
 {
-    Wh_Chain c;
-    c.WhC_id=id;
-    Triple t=Wh_BTreeSearch(c);
+    Triple t=Wh_BTreeSearch(id);//搜素结点
     if(t.tag==0)//没有找到对应结点
     {
         return false;
     }
     else//找到结点
     {
-        if(sum>t.r->P_data[t.id]->WhC_sum)//如果数量超过的话，则返回false
+        if(t.r->P_data[t.id]->WhC_decrease(sum))//如果数量超过的话，则返回false
         {
             return false;
         }
         else
         {
-            t.r->P_data[t.id]->WhC_Update(sum);
             std::string str="WH:[msg]the com "+std::to_string(id)+"(id) has been update!";
             Wh_msg->msg_add(str,true);
             Wh_msg->msg_pushdeal(0,sum);
@@ -508,25 +486,18 @@ bool BTree::Wh_UpdateNode(int id,int sum)
     }
 }
 //将单个商品添加到仓库中
-void BTree::Wh_InsertdataNode(int id,std::string mau,int year,int in_year,
-int mon,int in_mon,int sum)
+void BTree::Wh_InsertdataNode(const int& id,Commondity *c)
 {
-    Wh_Chain c;
-    c.WhC_id=id;
-    Triple t=Wh_BTreeSearch(c);//搜索结点
-    Commondity *p=new Commondity(mau,year,in_year,mon,in_mon,sum);
-    t.r->P_data[t.id]->WhC_insert(p);//插入数据
+    Triple t=Wh_BTreeSearch(id);//搜索结点
+    t.r->P_data[t.id]->WhC_insert(c);//插入数据
     std::string str="WH:[msg]the com "+std::to_string(id)+"(id) has been add!";
     Wh_msg->msg_add(str,true);
-    Wh_msg->msg_pushdeal(id,sum,0);
+    Wh_msg->msg_pushdeal(id,c->get_sum(),0);
 }
 //删除某一个特定的商品，i为要删除的位置，如果整个节点都被消除则返回false
-bool BTree::Wh_deletedataNode(int id,int i)
+bool BTree::Wh_deletedataNode(const int& id,const int& i)
 {
-    Wh_Chain c;
-    c.WhC_id=id;
-    Triple t=Wh_BTreeSearch(c);//搜索结点 
-    Wh_msg->msg_pushdeal(id,0,t.r->P_data[t.id]->WhC_ReSum(i));
+    Triple t=Wh_BTreeSearch(id);//搜索结点 
     t.r->P_data[t.id]->WhC_delete(i);//删除结点
     std::string str="WH:[msg]the Node of "+std::to_string(id)+"(id) has been removed!";
     Wh_msg->msg_add(str,true);
@@ -543,31 +514,16 @@ bool BTree::Wh_deletedataNode(int id,int i)
     return true;
 }
 //返回对应商品的利润
-int BTree::Wh_profit(const int &id)
+float BTree::Wh_profit(const int &id)
 {
-    Wh_Chain c;
-    c.WhC_id=id;
-    Wh_C.lock();
-    Triple p=Wh_BTreeSearch(c);//搜索位置
-    int j=p.r->P_data[p.id]->WhC_price_get;//返回该id下的利润
-    Wh_C.unlock();
-    return j;
+    Triple p=Wh_BTreeSearch(id);//搜索位置
+    return p.r->P_data[p.id]->WhC_Reprofit();//返回该id下的利润
 }
-//修改对应地址的节点的价格
-void BTree::Wh_Changeprice(Wh_Chain *p,const int i)
+//修改对应商品的利润,成功则返回true
+void BTree::Wh_ChaProfit(const int &id,const float &i)
 {
-    Wh_C.lock();
-    p->WhC_price_get=i;
-    Wh_C.unlock();
-    std::string str="WH:[msg]the price has been update!";
-    Wh_msg->msg_add(str,true);//向消息容器中插入消息
-}
-//随机获取id
-int BTree::Wh_getid(const int& i)
-{
-    int id;
-    Wh_C.lock();
-    id = Wh_idlist[i];
-    Wh_C.unlock();
-    return id;
+    Triple p=Wh_BTreeSearch(id);//搜索位置
+    p.r->P_data[p.id]->WhC_ChaProfit(i);
+    std::string str="WH:[msg]The profit has changed (id)"+std::to_string(id);
+    Wh_msg->msg_add(str,true);
 }
