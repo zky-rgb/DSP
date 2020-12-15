@@ -14,6 +14,30 @@ struct Triple;
 struct BNode;
 class Wh_Chain;
 
+//用来返回链表的结构体
+struct INFChain
+{
+    int id;
+    std::string name;
+    int sum;
+    float profit;
+    bool ifseason;
+    Type_Season season;
+    INFChain(const int & i,std::string n,const int & s,const float &p,bool ifs,Type_Season t):id(i),
+    name(n),sum(s),profit(p),ifseason(ifs),season(t){}
+};
+//用来返回商品信息的结构体
+struct INFCom
+{
+    std::string maufacter;
+    int in_m;  
+    int in_y;
+    int out_m;
+    int out_y;
+    int sum;
+    INFCom(std::string m,const int & inm,const int & iny,const int & outm,const int & outy,const int & s):
+    maufacter(m),in_m(inm),in_y(iny),out_m(outm),out_y(outy),sum(s){}
+};
 //B树仓库
 class BTree
 {
@@ -26,7 +50,7 @@ public:
     bool Wh_BTreeRemove(const int& d);//在Btree中移除商品
     Triple Wh_BTreeSearch(const int &id);//搜索
     bool Wh_UpdateNode(const int& id,const int &sum);//将编号为id的商品的数量减少
-    void Wh_InsertdataNode(const int& id,Commondity *C);//将单个商品添加到仓库中
+    void Wh_InsertdataNode(const int& id,Commondity C);//将单个商品添加到仓库中
     bool Wh_deletedataNode(const int& id,const int& i);//删除某一特定的商品，i为要删除的位置
     float Wh_profit(const int &id);//返回对应商品所对应的利润
     void Wh_ChaProfit(const int &id,const float &i);//修改对应商品的利润,成功则返回true
@@ -92,13 +116,12 @@ private:
 class Wh_Chain
 {
 public:
-    Wh_Chain(const int &i,const std::string &str,int p_in,int p_out):WhC_id(i),WhC_name(str),WhC_price_in(p_in),WhC_price_get(p_out-p_in),WhC_ifseason(false){}
-    std::string WhC_ReInf();//将节点的信息打印
-    std::string WhC_NodeInf(Commondity *ptr);//将结点中的数据节点信息,ptr为指向该节点的指针
-    void WhC_insert(Commondity* data);//插入数据
-    void WhC_delete(const int i);//删除数据
-    bool WhC_decrease(const int s);//s为减少的值
-    bool WhC_Overdue(const int& year,const int & day);//判断是否有产品即将过期    
+    Wh_Chain(const int &i,const std::string &str,const std::string &l,const float& p_in,const float& p_out):WhC_id(i),WhC_name(str),lab(l),WhC_price_in(p_in),WhC_price_get(p_out-p_in),WhC_ifseason(false){}
+    INFChain WhC_ReInf();//将节点的信息打印
+    INFCom WhC_NodeInf(const int & i);//将结点中的数据节点信息,ptr为指向该节点的指针
+    void WhC_insert(Commondity data);//插入数据
+    void WhC_delete(const int &i);//删除数据
+    bool WhC_decrease(int s);//s为减少的值
     int WhC_ReSum()//返回商品的总数
     {
         WhC_m.lock();
@@ -160,8 +183,8 @@ public:
     }
 private:
     std::mutex WhC_m;//链表锁
-    std::priority_queue<Commondity,std::vector<Commondity>,std::greater<Commondity> > wh_list;//保存的优先队列
-    std::string lab;
+    std::vector<Commondity> wh_list;//保存的优先队列
+    std::string lab;//商品的标签
     int WhC_id;//产品的iD
     std::string WhC_name;//产品的名称    
     float WhC_price_in;//进价
@@ -200,4 +223,6 @@ struct BNode
         P_data[0] = Wp;
     }
 };
+
 #endif
+
