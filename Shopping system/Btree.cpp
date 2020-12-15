@@ -467,7 +467,7 @@ bool BTree::Wh_UpdateNode(const int &id,const int& sum)
     }
     else//找到结点
     {
-        if(t.r->P_data[t.id]->WhC_decrease(sum))//如果数量超过的话，则返回false
+        if(!t.r->P_data[t.id]->WhC_decrease(sum))//如果数量超过的话，则返回false
         {
             return false;
         }
@@ -476,23 +476,28 @@ bool BTree::Wh_UpdateNode(const int &id,const int& sum)
             std::string str="WH:[msg]the com "+std::to_string(id)+"(id) has been update!";
             Wh_msg->msg_add(str,true);
             Wh_msg->msg_pushdeal(0,sum);
-            if(t.r->P_data[t.id]->WhC_sum<2)//如果数量过低，则报警
+            if(t.r->P_data[t.id]->WhC_ReSum()<2&&0<t.r->P_data[t.id]->WhC_ReSum())//如果数量过低，则报警
             {
                 str="WH:[warn]the sum of the com "+std::to_string(id)+"(id) is too low!";
                 Wh_msg->msg_add(str,false);//添加警告消息
+            }
+            else if(t.r->P_data[t.id]->WhC_ReSum()==0)
+            {
+                //如果没有商品了，则直接删除这个节点
+                Wh_BTreeRemove(id);
             }
             return true;
         }
     }
 }
 //将单个商品添加到仓库中
-void BTree::Wh_InsertdataNode(const int& id,Commondity *c)
+void BTree::Wh_InsertdataNode(const int& id,Commondity c)
 {
     Triple t=Wh_BTreeSearch(id);//搜索结点
     t.r->P_data[t.id]->WhC_insert(c);//插入数据
     std::string str="WH:[msg]the com "+std::to_string(id)+"(id) has been add!";
     Wh_msg->msg_add(str,true);
-    Wh_msg->msg_pushdeal(id,c->get_sum(),0);
+    Wh_msg->msg_pushdeal(id,c.get_sum(),0);
 }
 //删除某一个特定的商品，i为要删除的位置，如果整个节点都被消除则返回false
 bool BTree::Wh_deletedataNode(const int& id,const int& i)
