@@ -5,26 +5,44 @@
 #include<windows.h>
 #include<mutex>
 
-#define PAGEDOWN -1
-#define PAGEUP -2
+#define LINEDOWN -1
+#define LINEUP -2
 #define ENTER -3
-#define PAGEKEEP 0
+#define MAINVIEW 1
+#define MSGBAR 2
+#define TIMETABLE 3
 
-class Message;
-class BTree;
-class Wh_Chain;
-class UI;
-struct Triple;
+typedef int INTERFACE;
 
+struct PView//打印信息结结构体
+{
+    INTERFACE inf;//打印的页面是那个
+    int begin;//开始行数，第一行为0
+    int end;//结束行数
+    std::string *view;//指向打印的界面的指针
+    int *Light;//需要染色的行
+    PView(INTERFACE i,int b,int e,std::string *v,int *l):inf(i),begin(b),end(e),view(v),Light(l){}
+};
 //UI界面类
 class UI
 {
 public:
-    UI(Message* m,BTree *wh);
-    ~UI();
-    char UI_getinput(const int& high,const int& low,bool upper,bool lower,char key[],const int& n);//获取用户的输入信息
-    void UI_Printing(const int& begin,const int& end,const int& pbegin,const int &pend);//主界面的刷新
-    void UI_Printing(const int&line);//主界面的刷新，针对lightline的优化版本
+    UI()
+    {
+        //初始化几个消息框
+        handle = GetStdHandle(STD_OUTPUT_HANDLE);//获取程序的句柄
+	    GetConsoleCursorInfo(handle, &CursorInfo);//获取光标信息
+	    CursorInfo.bVisible = false; //将光标设置为不可见
+	    SetConsoleCursorInfo(handle, &CursorInfo);
+    }
+    ~UI()
+    {
+	    system("cls");
+	    std::cout << "System Out" << std::endl;
+    }
+    char UI_get(char key[],const int& n);//获取用户的输入信息(char版本)
+    void UI_get(std::string key[],int x[],int y[],const int&n);//获取用户的输入信息(string版本)
+    void UI_Print(PView pview[],const int n);//界面打印
     void UI_Setcursor(const int& x,const int &y)
     {
         coord.X=x;
@@ -50,14 +68,11 @@ public:
     void UI_Refresh_Time();//时序刷新
     std::mutex UI_C;//防止同时刷新
 private:
-    int UI_LightLine;//高亮的行数
-    HANDLE handle;//程序句柄
-	CONSOLE_CURSOR_INFO CursorInfo;//控制光标结构体
+    HANDLE handle;//程序句柄    
     COORD coord;//控制光标位置
+	CONSOLE_CURSOR_INFO CursorInfo;//控制光标结构体
 	CONSOLE_SCREEN_BUFFER_INFO csbi;//缓冲区信息
     std::string UI_view[15];//用来显示主界面的二维数组
-    Message* UI_m;//消息类指针
-    BTree *UI_wh;//指向仓库的指针
     bool UI_reall;//是否刷新主界面
 };
 #endif UIC
