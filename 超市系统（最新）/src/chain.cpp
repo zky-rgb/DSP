@@ -61,7 +61,7 @@ INFChain Wh_Chain::WhC_ReInf()
 {
     
     WhC_m.lock();
-    INFChain inf(WhC_id,WhC_name,WhC_sum,WhC_price_get,WhC_ifseason,WhC_season);
+    INFChain inf(WhC_id,WhC_name,WhC_sum,WhC_price_get,WhC_ifseason,WhC_season,lab);
     WhC_m.unlock();
     return inf;
 }
@@ -75,3 +75,4 @@ INFCom Wh_Chain::WhC_NodeInf(const int&i)
     INFCom inf(wh_list[i].get_mau(),min,yin,m,y,wh_list[i].get_sum());
     return inf;
 };
+
