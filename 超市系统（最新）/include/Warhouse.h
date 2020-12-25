@@ -71,8 +71,9 @@ struct INFChain
     float profit;
     bool ifseason;
     Type_Season season;
-    INFChain(const int & i,std::string n,const int & s,const float &p,bool ifs,Type_Season t):id(i),
-    name(n),sum(s),profit(p),ifseason(ifs),season(t){}
+    std::string lab;//标签
+    INFChain(const int & i,std::string n,const int & s,const float &p,bool ifs,Type_Season t,std::string l):id(i),
+    name(n),sum(s),profit(p),ifseason(ifs),season(t),lab(l){}
 };
 //用来返回商品信息的结构体
 struct INFCom
@@ -101,10 +102,6 @@ public:
     float Wh_profit(const int &id);//返回对应商品所对应的利润
     void Wh_ChaProfit(const int &id,const float &i);//修改对应商品的利润,成功则返回true
     Wh_Chain *Wh_list(bool restart=false);//用来遍历整个数
-    void Wh_getmsg(Message *m)//获取消息类指针
-    {
-        Wh_msg=m;
-    }
     int Wh_num()//返回仓库存储的商品的类别数
     {
         Wh_C.lock();
@@ -120,7 +117,6 @@ private:
     int B_n;//节点总数
     int B_m;//度数
     int B_num;//所有id的数量
-    Message *Wh_msg;
 };
 //仓库链表类
 class Wh_Chain
