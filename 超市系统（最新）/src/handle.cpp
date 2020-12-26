@@ -115,23 +115,6 @@ void Handle::H_createsell()
     }
 }
 
-//用户手动添加交易信息
-void Handle :: H_manualCreateSell(){
-    h_btree->Wh_list(1);
-    int id;
-    int num=0;
-    Wh_Chain* ptr;
-    int allnum=0;
-    std::cout<<"输入想要购买商品的id：";
-    std::cin>>id;
-
-    for(int i=0;i<h_btree->Wh_num();i++){
-
-    }
-
-}
-
-
 //处理消息队列
 //该函数主要用来分析进出口
 void Handle::H_handlemsg()
