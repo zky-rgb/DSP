@@ -9,6 +9,7 @@
 
 //时间类
 class UI;
+class BTree;
 enum class Type_Season;
 class Time
 {
@@ -82,6 +83,19 @@ public:
     void msg_deletedeal(const int&id);//从进出口表中删除项
     void msg_pushdealask(int id,int sum,int mon,int year);//向出售请求队列中添加消息
     void msg_deletedealask(const int &i);//从出售队列删除消息
+    bool msg_settime(const int mon,const int year)//初始化系统时间,如果是非法时间，则返回false
+    {
+        if(mon<=0||mon>12||year<=0)
+            return false;
+        else
+        {
+            msg_ctime.lock();
+            msg_time=mon;
+            msg_year=year;
+            msg_ctime.unlock();
+            return true;
+        }
+    }
     void msg_clearIO()//清空进出口表
     {
         msg_common.lock();
@@ -99,6 +113,10 @@ public:
     {
         msg_ui=ui;
     }
+    void msg_getbtree(BTree *btree)
+    {
+        msg_btree=btree;
+    }
 private:    
     std::mutex msg_common;//退出消息锁
     std::mutex msg_bool;//退出消息锁
@@ -109,8 +127,21 @@ private:
     Message_queue msg;//消息队列
     std::unordered_map<int,MsgSellreNode> msg_io;//进出口哈希表
     std::vector<MsgSellNode>msg_dealask;//出售请求
+    BTree *msg_btree;//BTree类指针
     UI *msg_ui;//UI类指针
     bool msg_uiquit;//是否关闭UI界面
 };
-
+//缓冲区类
+class MSG_BUFFER
+{
+public:
+    MSG_BUFFER(const int s);
+    void insert(int i);//插入
+    void sort();//排序
+    void swap(int i,int j);
+    void sift(int i,int j);//调整
+private:  
+    std::vector<int> buffer;
+    int size;
+};
 #endif
