@@ -68,12 +68,13 @@ struct INFChain
     int id;
     std::string name;
     int sum;
+    float cost;
     float profit;
     bool ifseason;
     Type_Season season;
     std::string lab;//标签
-    INFChain(const int & i,std::string n,const int & s,const float &p,bool ifs,Type_Season t,std::string l):id(i),
-    name(n),sum(s),profit(p),ifseason(ifs),season(t),lab(l){}
+    INFChain(const int & i,std::string n,const int & s,const float &c,const float &p,bool ifs,Type_Season t,std::string l):id(i),
+    name(n),sum(s),cost(c),profit(p),ifseason(ifs),season(t),lab(l){}
 };
 //用来返回商品信息的结构体
 struct INFCom
@@ -122,7 +123,8 @@ private:
 class Wh_Chain
 {
 public:
-    Wh_Chain(const int &i,const std::string &str,const std::string &l,const float& p_in,const float& p_out):WhC_id(i),WhC_name(str),lab(l),WhC_price_in(p_in),WhC_price_get(p_out-p_in),WhC_ifseason(false){}
+    Wh_Chain(const int &i,const std::string &str,const std::string &l,const float& p_in,const float& p_out):
+    WhC_id(i),WhC_name(str),lab(l),WhC_price_in(p_in),WhC_price_get(p_out-p_in),WhC_ifseason(false){}
     INFChain WhC_ReInf();//将节点的信息打印
     INFCom WhC_NodeInf(const int & i);//将结点中的数据节点信息,ptr为指向该节点的指针
     void WhC_insert(Commondity data);//插入数据
