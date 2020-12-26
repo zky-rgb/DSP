@@ -11,7 +11,7 @@
 void Handle::H_createsell()
 {
     using namespace std;
-    int sum=h_msg->msg_getsum();//获取商品的总数
+    int sum=h_btree->Wh_num();//获取商品的总数
     int random_id1,random_id2;//保存两个商品的id
     int random_sum1,random_sum2;//保存两个商品的数量
     int random_year1,random_year2;//保存两个随机年份
@@ -28,9 +28,7 @@ void Handle::H_createsell()
     }
     else if(sum==1)//只有一个商品,直接生成一个购买请求
     {
-        h_msg->msg_ctime.lock();
         h_msg->msg_gettime(mon,year,&now);   //获取当前月份和年份
-        h_msg->msg_ctime.unlock();
 
         srand(time(NULL));
         random_sum1=rand()%2+1;
@@ -40,7 +38,7 @@ void Handle::H_createsell()
         //插入队列
         //h_msg->msg_pushdealask(h_btree->Wh_getid(0),random_sum1,random_year1,random_mon1);
         //插入日志记录
-        log.InputLog(h_btree->Wh_list()->WhC_REID(),random_sum1,random_year1,random_mon1);
+        log->InputLog(h_btree->Wh_list()->WhC_REID(),random_sum1,random_year1,random_mon1);
         
     }
     else//有多个商品
@@ -109,8 +107,8 @@ void Handle::H_createsell()
 
         //插入日志记录
 
-        log.InputLog(random_id1,random_sum1,random_year1,random_mon1);
-        log.InputLog(random_id2,random_sum2,random_year2,random_mon2);
+        log->InputLog(random_id1,random_sum1,random_year1,random_mon1);
+        log->InputLog(random_id2,random_sum2,random_year2,random_mon2);
 
     }
 }
@@ -124,8 +122,8 @@ void Handle::H_handlemsg()
     int m;
     int max=-1;//用来保存最大值
     int maxid;
-    h_msg->msg_common.lock();
-    if (h_msg->msg_io.size() > 0)
+    //h_msg->msg_common.lock();
+    if (h_msg->msg_pop() == 1)
     {    
         bool i(true);
         //遍历进出口哈希表，并分析数据
@@ -155,13 +153,13 @@ void Handle::H_handlemsg()
         minstr = "H:[Suggest]buy less " + std::to_string(minid) + "(id)";
         maxstr = "H:[Suggest]buy more " + std::to_string(maxid) + "(id)"; 
         std::string ps = "H:[Suggest]Other kinds of commondities has not been selled";
-        h_msg->msg_common.unlock();
+        //h_msg->msg_common.unlock();
         h_msg->msg_add(minstr, true);
         h_msg->msg_add(maxstr, true);
         h_msg->msg_add(ps, true);
-        h_msg->msg_common.lock();
+        //h_msg->msg_common.lock();
     }
-    h_msg->msg_common.unlock();
+    //h_msg->msg_common.unlock();
 
 }
 
