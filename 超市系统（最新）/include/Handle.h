@@ -8,23 +8,6 @@
 using namespace std;
 class Message;
 
-//处理消息类
-class Handle
-{
-    public:
-    Handle(Message *m,BTree *bt):h_msg(m),h_btree(bt){};
-    void H_createsell();//生成交易信息
-    void H_handlemsg();//处理消息队列
-    void H_handleOverdue();//处理过期
-    void H_manualCreateSell();//用户手动添加交易信息
-
-
-    private:
-    Logs log;
-    Message* h_msg;//指向消息对象的指针
-    BTree* h_btree;//指向B树仓库的指针
-};
-
 
 
 class Logs{
@@ -42,6 +25,24 @@ private:
     vector<int> years;
     vector<int> months;
 };
+
+
+//处理消息类
+class Handle
+{
+    public:
+    Handle(Message *m,BTree *bt):h_msg(m),h_btree(bt){};
+    void H_createsell();//生成交易信息
+    void H_handlemsg();//处理消息队列
+    void H_handleOverdue();//处理过期
+    Logs log;
+
+    private:
+    Message* h_msg;//指向消息对象的指针
+    BTree* h_btree;//指向B树仓库的指针
+};
+
+
 
 
 Logs ::Logs() {
@@ -70,4 +71,6 @@ void Logs ::InputLog(int id,int num,int year,int month) {
     years.push_back(year);
     months.push_back(month);
 }
+
+
 #endif
