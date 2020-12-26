@@ -242,12 +242,16 @@ public:
     void sift_id(int i,int j);//根据id进行调整
     void sift_name(int i,int j);//根据名称进行调整
     void sift_lab(int i,int j);//根据标签进行调整
+    int Size()//返回缓冲区大小
+    {
+        return size;
+    }
     INFChain output(const int i)//将缓冲区中的第i个元素返回,从0开始
     {
         return buffer[i];
     }
 private:  
     std::vector<INFChain> buffer;
-    int size;
+    int size;//缓冲区大小
 };
 #endif
