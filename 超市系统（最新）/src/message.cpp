@@ -1,57 +1,26 @@
 #include"Message.h"
 #include"Warhouse.h"
+#include"UI.h"
 //消息类实现
-//消息类构造函数
-Message::Message()
-{
-	msg_time = 1;
-	msg_year = 2020;
-	msg_remsg=true;
-	msg_uiquit = false;
-	msg_handle=NULL;
-}
 //递增时间
 void Message::msg_increasetime()
 {
-	bool monchange(false);
     msg_ctime.lock();
 	++msg_time;
 	if(msg_time==13)
+	{
 		msg_time=1;
-	switch (msg_time)
-	{
-	case 1:
-		++msg_year;//年份递增
-		break;
-	case 3:
-		msg_season=Type_Season::Spr;
-		monchange = true;
-		break;
-	case 6:
-		msg_season=Type_Season::Sum;
-		monchange = true;
-		break;
-	case 9:
-		msg_season=Type_Season::Aut;
-		monchange = true;
-		break;
-	case 12:
-		msg_season=Type_Season::Win;
-		monchange = true;
-		break;
-	default:
-		break;
-	}
+		++msg_year;
+	}	
+	std::string s="Mon:"+to_string(msg_time);
+	if(msg_time<10)
+		s+=" ";
+	s+=" Year:"+to_string(msg_year);
 	msg_ctime.unlock();
-	msg_pop();//删除过期的消息
-	////调用处理类来生成对应的消息
-	if (monchange)
-	{
-		msg_handle->H_handlemsg();
-		msg_handle->H_createsell();
-		msg_handle->H_handleOverdue();
-		msg_clearIO();//重置
-	}
+	//更新时间栏
+	PView *p=new PView(TIMETABLE,0,0,&s,NULL);
+	msg_ui->UI_Print(p,1,0);//刷新
+	delete p;
 }
 //获取时间
 void Message::msg_gettime(int &mon,int &year,Type_Season *s)
@@ -88,114 +57,125 @@ void Message::msg_gettime(int &mon,int &year,Type_Season *s)
 	}
 }
 //增加消息，b为真时是普通消息
-void Message::msg_add(std::string s,bool b)
+void Message::msg_add(std::string s,bool warn)
 {
 	msg_ctime.lock();
-	int times = (msg_time + 2) % 12;
+	MsgNode mnode(s,(msg_time + 1) % 12+1,warn);
 	msg_ctime.unlock();	
-	if (times == 0)
+	msg.Insert(mnode);//插入节点
+	std::string s[8]={"","","","","","","",""};
+	s[0]+=" ";
+	for(int i(1),size(msg.Size());i<size+1;++i)
 	{
-		times=12;
+		
 	}
-	MsgNode* p=new MsgNode(s,times);//创建消息节点
-	if(b)
+	//更新消息栏
+	msg_cui.lock();
+	msg_ui->UI_clear(MSGBAR,0,7);//清空消息栏
+	
+	msg_cui.unlock();
+}
+//控制与用户交互
+void Message::msg_control()
+{
+	int page(0);
+	int lightline(-1);
+	bool quit(false);
+	while(!quit)
 	{
-		msg_common.lock();
-		msg_normalmsg.push_back(p);//在消息队列中添加队列
-		if(msg_normalmsg.size()>6)//如果队列的消息过多
+		switch (page)
 		{
-			msg_normalmsg.pop_front();//弹出队首的消息
+		case 0:
+			msg_ui->UI_WelCome();//欢迎界面
+			++page;//页数递增
+			break;
+		case 1://主菜单
+		{
+			lightline=1;//设置高亮行
+			msg_ui->UI_clear(MAINVIEW,0,14);//刷新面板
+			msg_ui->UI_Menu(0,5,&lightline);//菜单栏初始化
+			do
+			{
+				char c=msg_ui->UI_get(NULL,0);//捕获用户输入
+				if(c==LINEDOWN)//行数向下
+					if(lightline!=5)
+					{
+						++lightline;
+						msg_ui->UI_Menu(lightline-1,lightline,&lightline);
+					}
+				else if(c==LINEUP)//行数向上
+					if(lightline!=1)
+					{
+						--lightline;
+						msg_ui->UI_Menu(lightline,lightline+1,&lightline);
+					}
+				else if(c==ENTER)
+				{
+					page=lightline+1;
+					lightline=1;
+					break;
+				}
+			} while (1);
+			msg_ui->UI_clear(MAINVIEW,0,5);//刷新面板
+			lightline=(page%2==0)?1:-1;
+			break;
 		}
-		msg_common.unlock();
-		msg_bool.lock();
-		msg_remsg=true;
-		msg_bool.unlock();
+		case 2://商品检查界面
+		{	
+			//预载所有商品信息
+			msg_commondity();//加载商品检查界面
+			page=1;
+			break;
+		}
+		case 3://商品购买界面
+		{
+			msg_ui->UI_Menu_Purchase();
+			page=1;
+			break;
+		}
+		case 4://出售列表
+		{
+			msg_ui->UI_SellList();
+			page=1;
+			break;
+		}
+		case 5://显示日志
+		{
+			msg_ui->UI_Daily();
+			page=1;
+			break;
+		}
+		case 6://退出程序
+		{
+			quit=true;
+			break;
+		}
+		}
 	}
+}
+//弹出队首消息,成功则返回true,
+bool Message::msg_pop()
+{
+	if(msg.Size()==0)
+		return false;
 	else
 	{
-		msg_waring.lock();
-		msg_warningmsg.push_back(p);//在消息队列中添加消息
-		if(msg_warningmsg.size()>6)
-		{
-			msg_warningmsg.pop_back();//弹出队首消息
-		}
-		msg_waring.unlock();
-		msg_bool.lock();
-		msg_remsg=true;
-		msg_bool.unlock();
+		msg.Remove();
+		return true;
 	}
 }
-//删除过期的消息
-void Message::msg_pop()
+//获得消息队列队首的消息,如果失败，则返回false
+bool Message::msg_front(MsgNode& node)
 {
-	//检查普通消息队列
-	msg_common.lock();
-	if(!msg_normalmsg.empty())//消息队列不为空
+	if(msg.Size()==0)
+		return false;
+	else
 	{
-		do
-		{
-			MsgNode *p=msg_normalmsg.front();
-			msg_ctime.lock();
-			if(p->msg_lifetime==msg_time)
-			{
-				msg_normalmsg.pop_front();//过期消息出队
-				delete p;//删除掉这个消息节点
-			}
-			else
-			{
-				msg_ctime.unlock();
-				break;
-			}
-			msg_ctime.unlock();
-		}while(!msg_normalmsg.empty());
+		node=msg.Search(0);
+		return true;
 	}
-	msg_common.unlock();
-	//检查警告消息队列
-	msg_waring.lock();
-	if(!msg_warningmsg.empty())//消息队列不为空
-	{
-		do
-		{
-			MsgNode *p=msg_warningmsg.front();
-			msg_ctime.lock();
-			if(p->msg_lifetime==msg_time)
-			{
-				msg_warningmsg.pop_front();//过期消息出队
-				delete p;//删除掉这个消息节点
-			}
-			else
-			{
-				msg_ctime.unlock();
-				break;
-			}
-			msg_ctime.unlock();
-		}while(!msg_warningmsg.empty());
-	}
-	msg_waring.unlock();
-	//检查出售请求队列
-	msg_ctime.lock();
-	int year(msg_time);
-	int mon(msg_year);
-	msg_ctime.unlock();
-	msg_common.lock();
-	if(!msg_dealask.empty())
-	{
-		std::vector<MsgSellNode>::iterator iter(msg_dealask.begin());
-		do
-		{
-			iter=msg_dealask.begin();
-			if((*iter).msg_ddl_year*100+(*iter).msg_ddl_mon==year*100+mon)
-			{
-				msg_dealask.erase(iter);//队首出列
-			}
-			else
-			{
-				break;//直接退出循环
-			}
-		} while (!msg_dealask.empty());//只要还有元素，则继续
-	}
-	msg_common.unlock();
 }
+//对于
 //向进出口哈希表中添加项/更新项
 void Message::msg_pushdeal(const int& id,int in,int out)
 {
@@ -257,46 +237,4 @@ void Message::msg_deletedealask(const int& i)
 		++iter;
 	msg_dealask.erase(iter);//删除这条信息
 	msg_common.unlock();
-}
-//获取商品总数
-int Message::msg_getsum()
-{
-	int i;
-	msg_common.lock();
-	i=msg_sum;
-	msg_common.unlock();
-	return i;
-}
-//插入操作
-void Message_queue::Insert(const MsgNode& m)
-{
-	Msq_m.lock();	
-	if(end==head)
-		change(head);
-	dataqueue[end]=m;
-	change(end);
-
-	Msq_m.unlock();
-}	
-//修改head和end的位置
-void Message_queue::change(int &i)
-{
-	++i;
-	if(i==6)
-		i=0;
-}
-//弹出队首的元素
-void Message_queue::Remove()
-{
-	Msq_m.lock();
-		change(head);
-	Msq_m.unlock();
-}
-//搜索第i个消息的信息
-MsgNode Message_queue::Search(const int & i)
-{
-	Msq_m.lock();
-	MsgNode j=dataqueue[(head+i)%6];
-	Msq_m.unlock();
-	return j;
 }
