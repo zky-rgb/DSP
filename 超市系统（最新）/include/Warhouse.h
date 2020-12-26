@@ -8,6 +8,7 @@
 
 //季节枚举类
 enum class Type_Season { Spr, Sum, Aut, Win };
+enum class Type_Sort{id,name,lab};
 class Message;
 //类和结构体的声明
 struct BNode;
@@ -137,7 +138,7 @@ public:
         WhC_m.unlock();
         return i;
     }
-    void WhC_InitSeason(Type_Season s)
+    void WhC_InitSeason(Type_Season s)//初始化适合季节
     {
         WhC_m.lock();
         WhC_ifseason=true;
@@ -151,7 +152,7 @@ public:
         WhC_m.unlock();
         return t;
     }
-    std::string WhC_ReName()
+    std::string WhC_ReName()//返回名称
     {
         return WhC_name;
     }
@@ -227,5 +228,22 @@ struct BNode
         P_data[0] = Wp;
     }
 };
-
+//缓冲区类
+class MSG_BUFFER
+{
+public:
+    MSG_BUFFER(const int s):size(s)//构造函数
+    {
+        buffer.reserve(s);//扩容
+    }
+    void insert(INFChain i);//插入
+    void sort(Type_Sort type);//排序
+    void swap(int i,int j);//交换
+    void sift_id(int i,int j);//根据id进行调整
+    void sift_name(int i,int j);//根据名称进行调整
+    void sift_lab(int i,int j);//根据标签进行调整
+private:  
+    std::vector<INFChain> buffer;
+    int size;
+};
 #endif
