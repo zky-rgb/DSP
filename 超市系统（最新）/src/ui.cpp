@@ -1,459 +1,185 @@
 #include"UI.h"
-#include"Message.h"
-#include"Warhouse.h"
 #include<iostream>
 #include<conio.h>
 #include<stack>
 
 //UI类的实现
-//UI类构造函数
-UI::UI(Message* m,BTree *wh):UI_m(m),UI_wh(wh),UI_LightLine(0)
-{
-    //初始化几个消息框
-    handle = GetStdHandle(STD_OUTPUT_HANDLE);//获取程序的句柄
-	GetConsoleCursorInfo(handle, &CursorInfo);//获取光标信息
-	CursorInfo.bVisible = false; //将光标设置为不可见
-	SetConsoleCursorInfo(handle, &CursorInfo);
-}
-//UI类析构函数
-UI::~UI()
-{
-	system("cls");
-	std::cout << "System Out" << std::endl;
-}
+
 //获取用户的输入信息,high为上限，low为下限
-char UI::UI_getinput(const int& high,const int &low,bool upper,bool lower,char key[],const int& n)
+char UI::UI_get(char key[],const int& n)
 {
-	int c1,c2;//存储输入
+	int c1;//存储输入
 	do
 	{
 		c1=_getch();
 		if(c1==224)//是方向键
 		{
-			c2=_getch();
+			int c2 =_getch();
 			if(c2==80)//方向键下
-			{
-				UI_LightLine++;//高亮行增加		
-				if(UI_LightLine==high+1)
-					if(upper)
-					{
-						UI_LightLine=high;
-						return PAGEKEEP;
-					}
-					else
-					{
-						UI_LightLine=low;
-						return PAGEDOWN;
-					}
-			}		
+				return LINEDOWN;
 			else if(c2==72)//方向键上
-			{
-				UI_LightLine--;//高亮行减少
-				if(UI_LightLine==low-1)
-					if(lower)
-					{
-						UI_LightLine=low;
-						return PAGEKEEP;
-					}
-					else
-					{
-						UI_LightLine=high;
-						return PAGEUP;
-					}
-			}
+				return LINEUP;
+			else if(c2==75)
+				return LIFT;
+			else if(c2==77)
+				return RIGHT;
 		}
-		else if(c1==13)//如果是回车
+		else if(c1==13)//回车键
 			return ENTER;
+		else if(c1==9)//tab键
+			return TAB;
 		else
-		{
 			for(int i(0);i<n;i++)
-			{
 				if(c1==key[i])
 					return c1;
-			}
-		}	
 	}while(1);
 }
-//主界面的刷新
-void UI::UI_Printing(const int& begin,const int& end,const int& pbegin,const int &pend)
+//获取用户的输入信息(string版本)
+void UI::UI_get(std::string key[],int x[],int y[],const int&n)
+{
+	for(int i(0);i<n;++i)
+	{
+		UI_Setcursor(x[i],y[i]);
+		std::cin>>key[i];
+	}
+}
+//界面的刷新
+void UI::UI_Print(PView pview,int begin)
 {
 	UI_C.lock();
-	UI_Setcursor(0,begin);
-	for(int i(0);i<(end-begin);++i)
-    {
-		std::cout<<"                                                                                                                    "<<std::endl;	
-    }
-	UI_Setcursor(0,pbegin);
-	for(int i(0);i<(pend-pbegin);++i)
+	//初始化开始的行数
+	switch (pview.inf)
 	{
-		if(i==UI_LightLine&&UI_LightLine>=0)
+		case MAINVIEW://调整到主界面
+			begin+=0;
+			break;
+		case MSGBAR://调整到消息栏
+			begin+=15;
+			break;
+		case TIMETABLE://调整时间栏
+			begin+=15+8;
+			break;
+	}
+	UI_Setcursor(0,begin);//设置光标位置
+	//打印
+	for(int j(pview.begin),u(0);j<(pview.end+1);++j)
+	{
+		if(pview.Light[u]==j)
 		{
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN);//设置红色和绿色相加
-			std::cout<<UI_view[i]<<std::endl;//逐行刷新
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN | FOREGROUND_BLUE);//设置三色相加
+			if(pview.inf==MAINVIEW)//显示黄色
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN);//设置红色和绿色相加
+			else if(pview.inf==MSGBAR)//显示红色	
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED);
 		}
-		else
-			std::cout<<UI_view[i]<<std::endl;//逐行刷新
+		std::cout<<pview.view[j]<<std::endl;
+		if(pview.Light[u]==j)
+		{
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN | FOREGROUND_BLUE);//设置三色相加
+			++u;//递增
+		}
 	}
 	UI_C.unlock();
 }
-//主界面的刷新,高亮行优化版
-void UI::UI_Printing(const int&line)
+//清空界面
+void UI::UI_clear(INTERFACE i,const int begin,const int end)
 {
-	//只刷新制定行和lightline所在的行
+	int line;
+	//初始化开始的行数
+	switch (i)
+	{
+	case MAINVIEW://调整到主界面
+		line=0;
+		break;
+	case MSGBAR://调整到消息栏
+		line=15;
+		break;
+	case TIMETABLE://调整时间栏
+		line=15+8;
+		break;
+	}
 	UI_C.lock();
 	UI_Setcursor(0,line);
-	std::cout<<UI_view[line]<<"                                     ";//逐行刷新
-	UI_Setcursor(0,UI_LightLine);
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN);//设置红色和绿色相加
-	std::cout<<UI_view[UI_LightLine]<<"                                     ";//逐行刷新
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED |FOREGROUND_GREEN | FOREGROUND_BLUE);//设置三色相加
+	for(int j(0);j<(end-begin+1);++j)
+	{
+		std::cout<<"                                                                                                "<<std::endl;
+	}
 	UI_C.unlock();
 }
 //欢迎界面
 void UI::UI_WelCome()
 {
-	UI_view[4] ="       *    ***    *     *****       **         ";
-	UI_view[5] ="       *   ** **   *    **   **      **         ";
-	UI_view[6] ="        * **   ** *     * ****       **         ";
-	UI_view[7] ="         **     **       *****       *****      ";
-	UI_view[8] ="                                                ";
-	UI_view[9] ="      *****     ****    **      **    *****     "; 
-	UI_view[10]="     **        *    *   * *    * *   **   **    ";
-	UI_view[11]="     **        *    *   *  *  *  *   * ****     ";
-	UI_view[12]="      *****     ****    *   **   *    *****     ";
-	UI_view[13]="                       2020                     ";
-	UI_Printing(0,0,4,13);
+	system("cls");//清屏
+	std::string s[10];
+	s[0] ="       *    ***    *     *****       **         ";
+	s[1] ="       *   ** **   *    **   **      **         ";
+	s[2] ="        * **   ** *     * ****       **         ";
+	s[3] ="         **     **       *****       *****      ";
+	s[4] ="                                                ";
+	s[5] ="      *****     ****    **      **    *****     "; 
+	s[6] ="     **        *    *   * *    * *   **   **    ";
+	s[7] ="     **        *    *   *  *  *  *   * ****     ";
+	s[8] ="      *****     ****    *   **   *    *****     ";
+	s[9] ="                       2020                     ";
+	int *Light;
+	*Light=-1;
+	PView p(MAINVIEW,0,9,s,Light);
+	UI_Print(p,4);
 	_getch();
 }
 //菜单界面
-void UI::UI_Menu()
+void UI::UI_Menu(const int begin,const int end,int *light)
 {
-	UI_view[0] ="MENU:" ;
-	UI_view[1] ="  Show the commondiys";
-	UI_view[2] ="  purchase the commondiy";
-	UI_view[3] ="  sell list";
-	UI_view[4] ="  quit";
-	for(int i=(5);i<15;++i)//其他的行清空
-	{
-		UI_view[i]="";
-	}
-	UI_Printing(0,14,0,4);
-}
-//信息栏的打印
-void UI::UI_Msg()
-{	
-	using namespace std;
-	UI_C.lock();//防止同时刷新
-
-	//获取缓冲区的光标信息
-	GetConsoleScreenBufferInfo(handle, &csbi);
-	int x,y;//分别保存x,y的值
-	x=csbi.dwCursorPosition.X;//获取x的值
-	y=csbi.dwCursorPosition.Y;//获取y的值
-	//设置x,y的信息
-	UI_Setcursor(0,16);
-	for(int i(0);i<15;++i)//将区域刷新
-		cout<<"                                                                 "<<endl;   
-
-	UI_m->msg_common.lock();
-	if(UI_m->msg_normalmsg.size()>0)
-	{
-		for(list<MsgNode*>::iterator iter=UI_m->msg_normalmsg.begin();iter!=UI_m->msg_normalmsg.end();++iter)
-		{
-			cout<<(*iter)->msg_data<<endl;
-		}
-	}
-	for(int i(0);i<6-UI_m->msg_normalmsg.size();++i)
-	{
-		cout<<endl;
-	}
-	UI_m->msg_common.unlock();
-	cout<<"Warnning List:"<<endl;
-	UI_m->msg_waring.lock();
-	if(UI_m->msg_warningmsg.size()>0)
-	{
-		for(list<MsgNode*>::iterator iter=UI_m->msg_warningmsg.begin();iter!=UI_m->msg_warningmsg.end();++iter)
-		{
-			cout<<(*iter)->msg_data<<endl;
-		}
-	}
-	for(int i(0);i<6-UI_m->msg_warningmsg.size();++i)
-	{
-		cout<<endl;
-	}
-	UI_m->msg_waring.unlock();
-	UI_m->msg_ctime.lock();
-	cout<<"Season:";
-	switch (UI_m->msg_season)
-	{
-	case Type_Season::Spr:
-		cout << "Spr";
-		break;
-	case Type_Season::Sum:
-		cout << "Sum";
-		break;
-	case Type_Season::Aut:
-		cout << "Aut";
-		break;
-	case Type_Season::Win:
-		cout << "Win";
-		break;
-	}
-	cout<<" Mon:"<<UI_m->msg_time<<"  ";
-	cout<<"year:"<<UI_m->msg_year<<endl;
-	UI_m->msg_ctime.unlock();
-	coord.X=x;
-	coord.Y=y;
-	SetConsoleCursorPosition(handle, coord);//将光标还会
-	UI_C.unlock();
-}
-//用来检测刷新，刷新界面
-void UI::UI_Refresh()
-{
-	using namespace std;
-	int page(0);
-	bool quit(true);
-	while (!UI_m->msg_quit())//检查是否退出
-	{
-		switch (page)//选择打印的界面
-		{
-		case 0:
-			UI_LightLine=-1;//不打印高亮
-			UI_WelCome();//欢迎界面
-			page++;
-			break;
-		case 1:
-			UI_LightLine=1;//初始化第一行高亮
-			UI_Menu();//菜单界面
-			do
-			{	
-				int si=UI_LightLine;
-				char g=UI_getinput(4,1,true,true,NULL,0);
-				if(g==PAGEKEEP)
-					UI_Printing(si);
-				else
-				{
-					page=UI_LightLine+1;
-					break;
-				}
-			}while(1);
-			break;
-		case 2:
-		{
-			int in_page(0);//当前所在的页数
-			quit=false;
-			UI_LightLine=1;//初始化第一行
-			UI_wh->Wh_C.lock();
-			int sum=UI_wh->Wh_idlist.size();//获得id的总数
-			UI_wh->Wh_C.unlock();
-			int sum_p;//总页数
-			sum_p=sum/12;
-			int judgepage;//如果为true，则回到menu页
-			if((sum%12)!=0)
-			{
-				++sum_p;
-			}
-			do
-			{
-				UI_ShowCommondiy(sum,in_page,sum_p);//展示商品
-				UI_Clearview();//刷新
-				judgepage=UI_SC_Control(in_page);//获取控制
-				if(judgepage==1)
-				{
-					page=1;
-					quit=true;
-				}
-				else
-				{
-					if(judgepage==2)//重新初始化界面
-					{
-						in_page=0;//当前所在的页数
-						quit=false;
-						UI_LightLine=1;//初始化第一行
-						UI_wh->Wh_C.lock();
-						sum=UI_wh->Wh_idlist.size();//获得id的总数
-						UI_wh->Wh_C.unlock();
-						sum_p=sum/12;
-						if((sum%12)!=0||sum==0)
-						{
-							++sum_p;
-						}
-					}
-				}
-			}while(!quit);
-			break;
-		}
-		case 3:
-			UI_Menu_Purchase();//购买界面
-			page = 1;
-			break;
-		case 4:
-		{
-			int in_page(0);//当前所在的页数
-			quit=false;
-			UI_LightLine=1;//初始化第一行
-			UI_m->msg_common.lock();
-			int sum=UI_m->msg_dealask.size();
-			UI_m->msg_common.unlock();
-			int sum_p;//总页数
-			sum_p=sum/12;
-			int judgepage;//如果为true，则回到menu页
-			if((sum%12)!=0||sum==0)
-			{
-				++sum_p;
-			}
-			do
-			{
-				UI_SellList(sum,in_page,sum_p);//出售列表
-				UI_Clearview();//刷新
-				judgepage=UI_SellControl(in_page);//获取控制
-				if(judgepage==1)
-				{
-					page=1;
-					quit=true;
-				}
-				else
-				{
-					if(judgepage==2)//重新初始化界面
-					{
-						in_page=0;//当前所在的页数
-						quit=false;
-						UI_LightLine=1;//初始化第一行
-						UI_m->msg_common.lock();
-						sum=UI_m->msg_dealask.size();
-						UI_m->msg_common.unlock();
-						sum_p=sum/12;
-						if((sum%12)!=0)
-						{
-							++sum_p;
-						}
-					}
-				}
-			}while(!quit);
-			break;	
-		}
-		case 5:
-			UI_m->msg_bool.lock();
-			UI_m->msg_uiquit=true;//退出程序
-			UI_m->msg_bool.unlock();
-			break;
-		}
-	}
-}
-//时序刷新
-void UI::UI_Refresh_Time()
-{
-	if(UI_m->msg_ifretime())
-	{
-		UI_Msg();
-	}	
+	std::string s[6]={"MENU:",
+						"  Show the commondiys",
+						"  purchase the commondiy",
+						"  sell list",
+						"  daily record",
+						"  quit"};
+	PView p(MAINVIEW,begin,end,&s[begin],light);
+	UI_Print(p,0);
 }
 //展示商品界面,sum为商品总量，p为当前所在的子页面,sum_p为总页数
-void UI::UI_ShowCommondiy(const int &sum,int &p,const int &sum_p)
+int UI::UI_Search()
 {
-	using namespace std;
-	int p_end;//目前页的行数
-	if (p == sum_p - 1)
-	{
-		p_end = (sum - p * 12) % 12;
-		if (p_end == 0&&sum!=0)
-		{
-			p_end = 12;
-		}
-	}
-	else
-	{
-		p_end = 12;
-	}
-	if(UI_LightLine==0)//需要向上翻页
-	{
-		UI_LightLine=1;//重置到第一个
-		if(p!=0)
-		{
-			--p;//页面减少
-		}
-	}
-	else if(UI_LightLine==p_end+1)//需要向下翻页
-	{
-		if(p!=sum_p-1)//目前不是最后一页
-		{
-			++p;//页面增加
-			UI_LightLine=1;
-		}
-		else
-		{
-			UI_LightLine=p_end;
-		}
-	}
-	if (p == sum_p - 1)
-	{
-		p_end = (sum - p * 12) % 12;
-		if (p_end == 0&&sum!=0)
-		{
-			p_end = 12;
-		}
-	}
-	else
-	{
-		p_end = 12;
-	}
-	UI_view[0]="SHOWCOMMONDITY:";
-
-	Triple t;
-	for(int i(1);i<13;++i)
-	{
-		UI_wh->Wh_C.lock();
-		if(p_end<i)
-		{
-			//将该行置空
-			UI_view[i]="";
-		}
-		else
-		{
-			//搜索到id对应的节点
-			Wh_Chain chain(UI_wh->Wh_idlist[i-1+p*12]);
-			t=UI_wh->Wh_BTreeSearch(chain);
-			//将节点的信息打印
-			UI_view[i]=t.r->P_data[t.id]->WhC_ReInf();
-		}
-		UI_wh->Wh_C.unlock();
-	}
-	UI_view[13]="'B' to the Menu";
-	UI_view[14]="'Enter' to Choise ";
+	std::string str[4]={
+		"--------------------",
+		"-Search-",
+		"ID:",
+		"--------------------"
+	};
+	UI_clear(MAINVIEW,5,8);//清空
+	int lightline(-1);
+	int x(4),y(7);
+	PView view(MAINVIEW,0,3,str,&lightline);
+	UI_Print(view,5);
+	UI_get(str,&x,&y,1);//获取用户的输入
+	turn_string(str[0],lightline);//将输入转换
+	return lightline;
 }
-//商品界面的控制，如果返回menu，则返回true
-int UI::UI_SC_Control(const int &p)
+//提示框界面
+bool UI::UI_ToolTip(std::string str[], const int n, const int begin)
 {
-	int c1,c2;//存储输入
-
-	c1=_getch();
-	if(c1==224)//是方向键
+	UI_clear(MAINVIEW, begin, n-1);//清空
+	int lightline(-1);
+	//打印提示框
+	PView view(MAINVIEW, 0, n - 1, str, &lightline);
+	char c('c');
+	char gc;
+	while (1)
 	{
-		c2=_getch();
-		if(c2==80)//方向键下
-		{
-			UI_LightLine++;//高亮行增加
-		}
-		else if(c2==72)//方向键上
-		{
-			UI_LightLine--;//高亮行减少
-		}
-		return 0;
+		//获取用户输入
+		gc = UI_get(&c, 1);
+		if (gc == c)
+			return false;
+		else if (gc == ENTER)
+			return true;
+		else
+			continue;
 	}
-	else if(c1==13)//如果是回车
-	{
-		UI_Update(UI_LightLine+p*12-1);//对该特定项的展开   
-		return 2;//依然在目前界面
-	}
-	else if(c1==66||c1==98)//如果用户按了b或B
-	{
-		return 1;//返回true，返回menu界面
-	}
-	else
-	{
-		return 0;
-	}
+}
+void UI_Daily()
+{
+	
 }
 //对商品进行更新,传入商品的顺序
 void UI::UI_Update(const int &num)
@@ -579,53 +305,6 @@ void UI::UI_ShowDetail(const int &sum, int &p,const  int &sum_p,Triple t)
 	UI_view[12]="U to Buy";
 	UI_view[13]="'B' to Back";
 	UI_view[14]="'Enter' to Choise ";
-}
-//详细信息界面的控制，如果要返回展示商品界面，则返回true
-int UI::UI_SD_Control(const int &p,Wh_Chain *ptr)
-{
-	int c1,c2;//存储输入
-
-	c1=_getch();
-	if(c1==224)//是方向键
-	{
-		c2=_getch();
-		if(c2==80)//方向键下
-		{
-			UI_LightLine++;//高亮行增加
-		}
-		else if(c2==72)//方向键上
-		{
-			UI_LightLine--;//高亮行减少
-		}
-		return 2;
-	}
-	else if(c1==13)//如果是回车
-	{
-		bool j;
-		j=UI_Delete(ptr,p*10+UI_LightLine-1);//对该特定项的展开   
-		if (!j)
-			return 1;
-		else
-			return 0;//依然在目前界面
-	}
-	else if(c1==66||c1==98)//如果用户按了b或B
-	{
-		return 1;//返回true，返回menu界面
-	}
-	else if(c1==99||c1==67)//如果用户按了c或C
-	{
-		UI_Changepice(ptr);//进入修改价格界面
-		return 0;//依然在目前界面
-	}
-	else if(c1==117||c1==85)//如果用户按了U或者u
-	{
-		UI_Purchase(ptr);//进入购买界面
-		return 0;//依然在目前界面
-	}
-	else
-	{
-		return 0;
-	}
 }
 //删除节点
 bool UI::UI_Delete( Wh_Chain* ptr,const int i)
@@ -801,39 +480,6 @@ void UI::UI_SellList(const int &sum,int &p,const int &sum_p)
 	}
 	UI_view[13]="'B' to the Menu";
 	UI_view[14]="'Enter' to Choise ";
-}
-//出售控制
-int UI::UI_SellControl(const int&p)
-{
-	int c1,c2;//存储输入
-	
-	c1=_getch();
-	if(c1==224)//是方向键
-	{
-		c2=_getch();
-		if(c2==80)//方向键下
-		{
-			UI_LightLine++;//高亮行增加
-		}
-		else if(c2==72)//方向键上
-		{
-			UI_LightLine--;//高亮行减少
-		}
-		return 0;
-	}
-	else if(c1==13)//如果是回车
-	{
-		UI_CheckSell(UI_LightLine+p*12-1);//对该特定项的展开   
-		return 2;//依然在目前界面
-	}
-	else if(c1==66||c1==98)//如果用户按了b或B
-	{
-		return 1;//返回true，返回menu界面
-	}
-	else
-	{
-		return 0;
-	}
 }
 //对于出售列表的展开,传入物品位于请求出售容器中的位置
 void UI::UI_CheckSell(const int &num)
