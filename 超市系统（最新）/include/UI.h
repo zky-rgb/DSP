@@ -4,6 +4,7 @@
 #include<thread>
 #include<windows.h>
 #include<mutex>
+#include <sstream>
 
 #define LINEDOWN -1
 #define LINEUP -2
@@ -41,11 +42,10 @@ public:
     ~UI()
     {
 	    system("cls");
-	    std::cout << "System Out" << std::endl;
     }
     char UI_get(char key[],const int& n);//获取用户的输入信息(char版本)
     void UI_get(std::string key[],int x[],int y[],const int&n);//获取用户的输入信息(string版本)
-    void UI_Print(PView pview[],const int n,const int begin);//界面打印
+    void UI_Print(PView pview,const int begin);//界面打印
     void UI_Setcursor(const int& x,const int &y)
     {
         coord.X=x;
@@ -55,8 +55,10 @@ public:
     void UI_clear(INTERFACE i,const int begin,const int end);//清空界面
     void UI_WelCome();//欢迎界面
     void UI_Menu(const int begin,const int end,int *light);//菜单界面
-    void UI_ShowCommondiy();//打印仓库的物品
     void UI_ShowDetail();//展示详细信息
+    int UI_Search();//搜索界面
+    bool UI_ToolTip(std::string str[],const int n,const int begin);//提示框
+    void UI_Daily();//日志界面
     bool UI_Delete();//删除界面
     void UI_Changepice();//更新价格
     void UI_Update(const int &num);//对商品进行更新,传入商品的顺序
@@ -71,4 +73,11 @@ private:
 	CONSOLE_CURSOR_INFO CursorInfo;//控制光标结构体
 	CONSOLE_SCREEN_BUFFER_INFO csbi;//缓冲区信息
 };
+template<typename T>
+void turn_string(std::string str,T &i)
+{
+    std::stringstream S;
+    S<<str;
+    S>>i;
+}
 #endif UIC
