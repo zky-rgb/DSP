@@ -3,12 +3,16 @@ Logs ::Logs() {
     string example = "时间 货物名称 货物数量";
 }
 
-void Logs ::ShowLogs() {
-    cout<<"----日志----"<<endl;
+void Logs ::ShowLogs(int *id,int *num,int *year,int *month,int i) {
+    /*cout<<"----日志----"<<endl;
     for(int i=0;i<ids.size();i++){
         cout<<ids[i]<<" "<<nums[i]<<" "<<years[i]<<" "<<months[i]<<endl;
     }
-    cout<<"------------"<<endl;
+    cout<<"------------"<<endl;*/
+    *id = ids[i];
+    *num = nums[i];
+    *year = years[i];
+    *month = months[i];
 }
 
 void Logs ::SaveLogs() {
@@ -24,5 +28,9 @@ void Logs ::InputLog(int id,int num,int year,int month) {
     nums.push_back(num);
     years.push_back(year);
     months.push_back(month);
+}
+
+int Logs ::ReSize() {
+    return ids.size();
 }
 
