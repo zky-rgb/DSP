@@ -5,11 +5,11 @@
 #include<array>
 #include<unordered_map>
 #include<mutex>
-#include"handle.h"
 
 //时间类
 class UI;
 class BTree;
+class Logs;
 enum class Type_Season;
 class Time
 {
@@ -76,7 +76,8 @@ public:
     void msg_gettime(int &mon,int&year,Type_Season* sea=NULL);//获取时间
     void msg_add(std::string s,bool warn);//向消息栏添加新的消息
     void msg_control();//控制与用户交互
-    void msg_commondity();//商品界面的封装
+    int  msg_commondity();//商品界面的封装,返回需要展开的id
+    void msg_detail(const int id);//显示商品详细信息
     bool msg_pop();//弹出队首的消息，成功返回true
     bool msg_front(MsgNode& node);//返回队首的消息信息
     void msg_pushdeal(const int& id,int in=0,int out=0);//向进出口哈希表中添加项/更新项
@@ -116,7 +117,8 @@ public:
     void msg_getbtree(BTree *btree)
     {
         msg_btree=btree;
-    }
+    }    
+    std::unordered_map<int,MsgSellreNode> msg_io;//进出口哈希表
 private:    
     std::mutex msg_common;//退出消息锁
     std::mutex msg_bool;//退出消息锁
@@ -125,23 +127,10 @@ private:
     int msg_year;//存储年份
     int msg_time;//储存月份
     Message_queue msg;//消息队列
-    std::unordered_map<int,MsgSellreNode> msg_io;//进出口哈希表
     std::vector<MsgSellNode>msg_dealask;//出售请求
     BTree *msg_btree;//BTree类指针
     UI *msg_ui;//UI类指针
     bool msg_uiquit;//是否关闭UI界面
 };
-//缓冲区类
-class MSG_BUFFER
-{
-public:
-    MSG_BUFFER(const int s);
-    void insert(int i);//插入
-    void sort();//排序
-    void swap(int i,int j);
-    void sift(int i,int j);//调整
-private:  
-    std::vector<int> buffer;
-    int size;
-};
+
 #endif
