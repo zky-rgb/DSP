@@ -191,7 +191,7 @@ void Handle::H_handleOverdue()
         if(year>dyear){
             string str = "H:[warn]Some commondity (id)" + to_string(ptr->WhC_REID()) + " will overdue!";
             h_msg->msg_add(str, false);
-        }else if(year==year && mon>dmon){
+        }else if(year==dyear && mon>dmon){
             string str = "H:[warn]Some commondity (id)" + to_string(ptr->WhC_REID()) + " will overdue!";
             h_msg->msg_add(str, false);
         }else{
