@@ -103,23 +103,27 @@ void Message::msg_control()
 			{
 				char c = msg_ui->UI_get(NULL, 0); //捕获用户输入
 				if (c == LINEDOWN)				  //行数向下
+				{
 					if (lightline != 5)
 					{
 						++lightline;
 						msg_ui->UI_Menu(lightline - 1, lightline, &lightline);
 					}
-					else if (c == LINEUP) //行数向上
+				}
+				else if (c == LINEUP) //行数向上
+				{
 						if (lightline != 1)
 						{
 							--lightline;
 							msg_ui->UI_Menu(lightline, lightline + 1, &lightline);
 						}
-						else if (c == ENTER)
-						{
+				}
+				else if (c == ENTER)
+				{
 							page = lightline + 1;
 							lightline = 1;
 							break;
-						}
+				}
 			} while (1);
 			msg_ui->UI_clear(MAINVIEW, 0, 5); //刷新面板
 			break;
@@ -127,8 +131,16 @@ void Message::msg_control()
 		case 2: //商品检查界面
 		{
 			//预载所有商品信息
-			msg_commondity(); //加载商品检查界面
-			page = 1;
+			int id=msg_commondity(); //加载商品检查界面
+			//if (id == -1)
+			//	page = 1;//回到主界面
+			//else
+			//{
+			//	Triple t(msg_btree->Wh_BTreeSearch(id));//搜索对应的id
+
+			//}
+			page = 1;//回到主界面
+
 			break;
 		}
 		case 3: //商品购买界面
@@ -179,7 +191,7 @@ bool Message::msg_front(MsgNode &node)
 		return true;
 	}
 }
-//加载商品到缓冲区
+//加载商品到缓冲区,返回要详细展开的项
 int Message::msg_commondity()
 {
 	//将仓库的信息保存到缓冲区内
@@ -243,10 +255,31 @@ int Message::msg_commondity()
 		case 's': //进入搜哦
 		{
 			Triple t=msg_btree->Wh_BTreeSearch(msg_ui->UI_Search());//搜索对应的id
-			if (!t.tag)
+			if (t.tag)
 			{
-				//没有搜索到
-
+				//搜素成功
+				std::string tip[4] = {
+					"----------------------------",
+					"          Search Success",
+					"ENTER-Detail       c-Cancel"
+					"----------------------------"
+				};
+				if (msg_ui->UI_ToolTip(tip, 4, 5))
+					return t.id;
+				else
+					ifprint = true;
+			}
+			else
+			{
+				//搜素失败
+				std::string tip[4] = {
+				"----------------------------",
+				"        Can't Find This ID",
+				"        Enter to continue"
+				"----------------------------"
+				};
+				msg_ui->UI_ToolTip(tip, 4, 5);
+				ifprint = true;
 			}
 			break;
 		}
