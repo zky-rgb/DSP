@@ -63,8 +63,11 @@ void Message::msg_add(std::string s,bool warn)
 	MsgNode mnode(s,(msg_time + 1) % 12+1,warn);
 	msg_ctime.unlock();	
 	msg.Insert(mnode);//插入节点
-	std::string s[8]={"","","","","","","",""};
-	s[0]+=" ";
+	for(int i=0;i<8;i++){
+	    s[i]=' ';
+	}
+
+	s[0]+= (char)' ';
 	for(int i(1),size(msg.Size());i<size+1;++i)
 	{
 		
